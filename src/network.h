@@ -17,7 +17,7 @@ int net_connect(const char* host, char* port);
 int net_send(uint8_t packet_id, size_t size, ...);
 int net_recv_and_process();
 void net_quit();
-int net_get_logged_in(void);
-void net_set_logged_in(int val);
+const int net_get_logged_in(void);
+void net_set_logged_in(const int val);
 
 #endif

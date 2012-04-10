@@ -115,7 +115,6 @@ void packet_encode(uint8_t packet_id, char* buffer, va_list* v){
 void packet_decode(uint8_t packet_id, char* buffer, ...){
     va_list v;
     va_start(v, buffer);
-    char* origbuff = buffer;
     
     for(const char* p = packets[packet_id].layout; *p; p++){
         switch(*p){

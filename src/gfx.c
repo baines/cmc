@@ -16,7 +16,7 @@ struct chunkinfo {
 };
 
 struct vx {
-	float x, y, z;
+	int x, y, z;
 	float tx, ty;
 	unsigned char r, g, b;
 };
@@ -36,7 +36,7 @@ int cur = 0;
 int numchunks = 0;
 
 struct lut {
-	float v[12];
+	char v[12];
 } lut[6];
 
 struct tx {
@@ -105,7 +105,7 @@ void loadTex(void){
 }
 
 void addQuad(float x, float y, float z, unsigned char j, unsigned char i, unsigned char l){
-	float* val = lut[j].v;
+	char* val = lut[j].v;
 	struct vx v[4] = {
 		{ x + val[0], y + val[1], z + val[2], tex[i].x1, tex[i].y1, l, l, l },
 		{ x + val[3], y + val[4], z + val[5], tex[i].x2, tex[i].y1, l, l, l },
@@ -131,9 +131,9 @@ void genTexCoords(void){
 void genlut(void){
 	uint16_t mask[6] = { 0x37B, 0xB37, 0xF93, 0x816, 0x05A, 0x948 };
 	for(int j = 0; j < 6; ++j){
-		float* val = lut[j].v;
+		char* val = lut[j].v;
 		for(int i = 0; i < 12; ++i){
-			val[i] = ((((mask[j] >> i) & 1) << 1) - 1) * 0.5;
+			val[i] = ((mask[j] >> i) & 1);
 		}
 	}
 }
@@ -218,7 +218,7 @@ void gfx_drawframe(float xrot, float yrot){
 	for(j = 0; j < numchunks; ++j){
 		if(!SphereInFrustum(chunks[j].x, chunks[j].y, chunks[j].z)) continue;
 		glBindBuffer(GL_ARRAY_BUFFER, chunks[j].vbo);
-		glVertexPointer(3, GL_FLOAT, sizeof(struct vx), VBO_OFF(0));
+		glVertexPointer(3, GL_INT, sizeof(struct vx), VBO_OFF(0));
 		glTexCoordPointer(2, GL_FLOAT, sizeof(struct vx), VBO_OFF(offsetof(struct vx, tx)));
 		glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(struct vx), VBO_OFF(offsetof(struct vx, r)));
 		glDrawArrays(GL_QUADS, 0, chunks[j].count);
@@ -226,7 +226,7 @@ void gfx_drawframe(float xrot, float yrot){
 	//glPopMatrix();
 	SDL_GL_SwapBuffers();
 	glPopMatrix();
-	printf("x:%.2f, y:%.2f, z:%.2f\n", -xpos, -ypos, -zpos);
+	//printf("x:%.2f, y:%.2f, z:%.2f\n", -xpos, -ypos, -zpos);
 }
 
 void gfx_addchunk(int cx, int cz, uint16_t mask, unsigned char const* buff){
@@ -237,7 +237,6 @@ void gfx_addchunk(int cx, int cz, uint16_t mask, unsigned char const* buff){
 
 void gfx_carve_chunks(void){
 	for(; nci > 0; --nci){
-		
 		uint16_t mask = newchunks[nci].mask;
 		int cx = newchunks[nci].cx;
 		int cz = newchunks[nci].cz;	
@@ -295,7 +294,7 @@ void gfx_carve_chunks(void){
 			bptr += 4096;
 			++cur;
 		}
-		free(newchunks[nci].buff);
+		free((void*)newchunks[nci].buff);
 		printf("%d chunks generated.\n", mc);
 	}
 }

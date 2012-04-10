@@ -158,11 +158,11 @@ int net_recv_and_process(){
     return NET_OK;
 }
 
-void net_set_logged_in(int val){
+void net_set_logged_in(const int val){
 	logged_in = val;
 }
 
-int net_get_logged_in(void){
+const int net_get_logged_in(void){
 	return logged_in;
 }
 
