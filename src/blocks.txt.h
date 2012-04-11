@@ -2,7 +2,7 @@
 /* id --       name        -- tx - ty -- flags */
 B(0x00, AIR                 , 0  , 0  , 0)
 B(0x01, STONE               , 1  , 0  , BF_SOLID)
-B(0x02, GRASS               , 3  , 0  , BF_SOLID)
+B(0x02, GRASS               , 1  , 9  , BF_SOLID)
 B(0x03, DIRT                , 2  , 0  , BF_SOLID)
 B(0x04, COBBLE              , 0  , 1  , BF_SOLID)
 B(0x05, WOOD                , 4  , 0  , BF_SOLID)

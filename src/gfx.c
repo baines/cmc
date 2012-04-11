@@ -8,6 +8,7 @@
 #include <GL/glext.h>
 #include <time.h>
 #define VBO_OFF(i) ((char *)NULL + (i))
+#include "blocks.h"
 
 struct chunkinfo {
 	int cx, cz;
@@ -38,43 +39,6 @@ int numchunks = 0;
 struct lut {
 	char v[12];
 } lut[6];
-
-struct tx {
-	float x1, y1, x2, y2;
-} tex[256] = {
-	[0x00] = { 0, 0 },
-	[0x01] = { 1, 0 },
-	[0x02] = { 1, 9 },
-	[0x03] = { 2, 0 },
-	[0x04] = { 0, 1 },
-	[0x05] = { 4, 0 },
-	[0x06] = { 15, 0},
-	[0x07] = { 1, 1 },
-	[0x08] = { 15, 12},
-	[0x09] = { 15, 12},
-	[0x0A] = { 15, 15},
-	[0x0B] = { 15, 15},
-	[0x0C] = { 2, 1 },
-	[0x0D] = { 3, 1 },
-	[0x0E] = { 0, 2 },
-	[0x0F] = { 1, 2 },
-	[0x10] = { 2, 2 },
-	[0x11] = { 4, 1 },
-	[0x12] = { 4, 3 },
-	[0x13] = { 0, 3 },
-	[0x14] = { 1, 3 },
-	[0x15] = { 0, 10},
-	[0x16] = { 0, 9 },
-	[0x17] = { 14, 2},
-	[0x18] = { 0, 11},
-	[0x19] = { 10, 4},
-	[0x1A] = { 6, 8 },
-	[0x62] = { 6, 3 },
-	[0x4E] = { 2, 4 },
-	[0x50] = { 2, 4 },
-	
-	[0x4F] = { 3, 4},
-};
 
 int SphereInFrustum(float x, float y, float z);
 void getFrustum();
@@ -107,25 +71,39 @@ void loadTex(void){
 void addQuad(float x, float y, float z, unsigned char j, unsigned char i, unsigned char l){
 	char* val = lut[j].v;
 	struct vx v[4] = {
-		{ x + val[0], y + val[1], z + val[2], tex[i].x1, tex[i].y1, l, l, l },
-		{ x + val[3], y + val[4], z + val[5], tex[i].x2, tex[i].y1, l, l, l },
-		{ x + val[6], y + val[7], z + val[8], tex[i].x2, tex[i].y2, l, l, l },
-		{ x + val[9], y + val[10], z + val[11], tex[i].x1, tex[i].y2, l, l, l }
+		{ x + val[0], y + val[1], z + val[2], blocks[i].tx1, blocks[i].ty1, l, l, l },
+		{ x + val[3], y + val[4], z + val[5], blocks[i].tx2, blocks[i].ty1, l, l, l },
+		{ x + val[6], y + val[7], z + val[8], blocks[i].tx2, blocks[i].ty2, l, l, l },
+		{ x + val[9], y + val[10], z + val[11], blocks[i].tx1, blocks[i].ty2, l, l, l }
 	};
 	memcpy(chunks[cur].verts + chunks[cur].count, &v, 4 * sizeof(struct vx));
 	chunks[cur].count += 4;
 }
 
-void genTexCoords(void){
-	for(int i = 0; i < 256; ++i){
-		tex[i].x2 = tex[i].x1 + 1;
-		tex[i].y2 = tex[i].y1 + 1;
+void addBillBoard(int x, int y, int z, unsigned char i){
+	struct vx v[16] = {
+		{ x, y+1, z, blocks[i].tx1, blocks[i].ty1, 255, 255, 255 },
+		{ x+1, y+1, z+1, blocks[i].tx2, blocks[i].ty1, 255, 255, 255 },
+		{ x+1, y, z+1, blocks[i].tx2, blocks[i].ty2, 255, 255, 255 },
+		{ x, y, z, blocks[i].tx1, blocks[i].ty2, 255, 255, 255 },
 		
-		tex[i].x1 /= 16.0f;
-		tex[i].y1 /= 16.0f;
-		tex[i].x2 /= 16.0f;
-		tex[i].y2 /= 16.0f;
-	}
+		{ x, y, z, blocks[i].tx1, blocks[i].ty2, 255, 255, 255 },
+		{ x+1, y, z+1, blocks[i].tx2, blocks[i].ty2, 255, 255, 255 },
+		{ x+1, y+1, z+1, blocks[i].tx2, blocks[i].ty1, 255, 255, 255 },
+		{ x, y+1, z, blocks[i].tx1, blocks[i].ty1, 255, 255, 255 },
+		
+		{ x+1, y+1, z, blocks[i].tx1, blocks[i].ty1, 255, 255, 255 },
+		{ x, y+1, z+1, blocks[i].tx2, blocks[i].ty1, 255, 255, 255 },
+		{ x, y, z+1, blocks[i].tx2, blocks[i].ty2, 255, 255, 255 },
+		{ x+1, y, z, blocks[i].tx1, blocks[i].ty2, 255, 255, 255 },
+		
+		{ x+1, y, z, blocks[i].tx1, blocks[i].ty2, 255, 255, 255 },
+		{ x, y, z+1, blocks[i].tx2, blocks[i].ty2, 255, 255, 255 },
+		{ x, y+1, z+1, blocks[i].tx2, blocks[i].ty1, 255, 255, 255 },
+		{ x+1, y+1, z, blocks[i].tx1, blocks[i].ty1, 255, 255, 255 },
+	};
+	memcpy(chunks[cur].verts + chunks[cur].count, &v, 16 * sizeof(struct vx));
+	chunks[cur].count += 16;
 }
 
 void genlut(void){
@@ -139,7 +117,6 @@ void genlut(void){
 }
 
 void gfx_init(void){
-	genTexCoords();
 	genlut();
 	
 	putenv("SDL_MOUSE_RELATIVE=0");
@@ -162,8 +139,8 @@ void gfx_init(void){
 	//glEnable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	//glEnable(GL_ALPHA_TEST);
-	//glAlphaFunc(GL_GREATER, 0);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0);
 		
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -246,7 +223,7 @@ void gfx_carve_chunks(void){
 		numchunks += mc;
 		chunks = realloc(chunks, numchunks * sizeof(*chunks));
 				
-		int i, j, x, y, z, yup, ydn;
+		int i, j, x, y, z, yup, ydn, flags;
 		
 		for(j = 0; j < 16; ++j){
 			if((mask & (1 << j)) == 0) continue;
@@ -262,23 +239,32 @@ void gfx_carve_chunks(void){
 				z = (cz * 16) + ((i & 0xF0) >> 4);
 				y = (j * 16) + (i >> 8);
 			
-				if(bptr[i] == 0){
-					if((x & 0x0F) < 0x0F && bptr[i+1]){
+				if(!((flags = blocks[bptr[i]].flags) & BF_SOLID)){
+				
+					if(flags & BF_BILLBOARD){
+						addBillBoard(x, y, z, bptr[i]);
+					}
+					
+					if(bptr[i] == 0 && (y & 0x0F) > 0x00 && bptr[i-256] == 0x09){
+						addQuad(x, y, z, 5, bptr[i-256], 255);
+					} 
+					
+					if((x & 0x0F) < 0x0F && blocks[bptr[i+1]].flags & BF_SOLID){
 						addQuad(x, y, z, 0, bptr[i+1], 128);
 					}
-					if((z & 0x0F) < 0x0F && bptr[i+16]){
+					if((z & 0x0F) < 0x0F && blocks[bptr[i+16]].flags & BF_SOLID){
 						addQuad(x, y, z, 1, bptr[i+16], 128);
 					}
-					if((yup || (y & 0x0F) < 0x0F) && bptr[i+256]){
+					if((yup || (y & 0x0F) < 0x0F) && blocks[bptr[i+256]].flags & BF_SOLID){
 						addQuad(x, y, z, 2, bptr[i+256], 64);
 					}
-					if((x & 0x0F) > 0x00 && bptr[i-1]){
+					if((x & 0x0F) > 0x00 && blocks[bptr[i-1]].flags & BF_SOLID){
 						addQuad(x, y, z, 3, bptr[i-1], 128);
 					}
-					if((z & 0x0F) > 0x00 && bptr[i-16]){
+					if((z & 0x0F) > 0x00 && blocks[bptr[i-16]].flags & BF_SOLID){
 						addQuad(x, y, z, 4, bptr[i-16], 128);
 					}
-					if((ydn || (y & 0x0F) > 0x00) && bptr[i-256]){
+					if((ydn || (y & 0x0F) > 0x00) && blocks[bptr[i-256]].flags & BF_SOLID){
 						addQuad(x, y, z, 5, bptr[i-256], 255);
 					}
 				} else if(!yup && ((y & 0x0F) == 0x0F)){
