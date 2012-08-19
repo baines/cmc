@@ -85,12 +85,13 @@ void net_init(){
 
 int net_connect(const char* host, char* port){
     struct addrinfo* ai;
-    int flag = 1;
-   	getaddrinfo(host, port, NULL, &ai);
+   	if(getaddrinfo(host, port, NULL, &ai))
+   		return NET_NOSUCHHOST;
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		return NET_CANTCONNECT;
-	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
-	connect(sock, ai->ai_addr, ai->ai_addrlen);
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (int[]){1}, sizeof(int));
+	if(connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
+		return NET_CANTCONNECT;
 	freeaddrinfo(ai);
 	pfd.fd = sock;
 	pfd.events = POLLIN;
@@ -117,8 +118,10 @@ int net_recv(){
     
     int bytes_read = recv(sock, inBuffTail, BUFF_MAX - (inBuffTail-inBuff), 0);
     
-    if(bytes_read <= 0)
+    if(bytes_read < 0)
         return NET_READERR;
+	else if(bytes_read == 0)
+		return NET_NOMOREDATA;
     
     inBuffSize += bytes_read;
     inBuffTail += bytes_read;
@@ -128,7 +131,7 @@ int net_recv(){
 
 int net_poll_packets(uint8_t* packet_id){
     if(inBuffSize <= 0) return NET_NOMOREDATA;
-    int size = packet_size(inBuffHead, inBuffSize);
+    size_t size = packet_size(inBuffHead, inBuffSize);
     if(size == 0 || size > inBuffSize) return NET_NOMOREDATA;
     
     *packet_id = inBuffHead[0];
@@ -162,7 +165,7 @@ void net_set_logged_in(const int val){
 	logged_in = val;
 }
 
-const int net_get_logged_in(void){
+int net_get_logged_in(void){
 	return logged_in;
 }
 

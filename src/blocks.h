@@ -14,7 +14,7 @@ enum {
 };
 
 struct blockinfo {
-	float tx1, tx2, ty1, ty2;
+	uint8_t tx1, tx2, ty1, ty2;
 	uint16_t flags;
 };
 

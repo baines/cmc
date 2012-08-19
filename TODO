@@ -1,0 +1,20 @@
+fix seams
+fix colours
+add second alpha blending enabled vbo
+
+refactor gfx.c
+
+block metadata
+lighting
+texture fx
+
+movement
+new chunk loading
+block changing
+
+entities
+
+all the other stuff
+
+greedy cube meshing
+occlusion query

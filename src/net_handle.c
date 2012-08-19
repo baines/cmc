@@ -6,7 +6,7 @@
 #include "zlib.h"
 #include "string.h"
 #include "gfx.h"
-//#include "includes.h"
+#include "chunk.h"
 
 void net_handle_keepalive(char* buffer){
     int32_t nonce;
@@ -26,6 +26,8 @@ void net_handle_login(char* buffer){
     printf("LOGIN: t: %s, gm: %d, w: %d, d: %d, h: %d," 
                 "n: %d\n", type, mode, world, difficulty, height, slots);
     net_set_logged_in(1);
+    free(empty);
+    free(type);
 }
 void net_handle_handshake(char* buffer){
     char* hash;
@@ -33,17 +35,18 @@ void net_handle_handshake(char* buffer){
     packet_decode(P_HANDSHAKE, buffer, &hash);
     fprintf(stderr, "HANDSHAKE: %s\n", hash);
     net_send(P_LOGIN, 20 + 8, 29, "Test", "", 0, 0, 0, 0, 0);
+    free(hash);
 }
 void net_handle_chat(char* buffer){
-    const char* msg;
+    unsigned char* msg;
     
     packet_decode(P_CHAT_MSG, buffer, &msg);
     
     const char* ansi = "04261537";
     
     printf("\e[1;37m");
-    for(const char* c = msg; *c; ++c){
-        if(!((unsigned char)(*c) == 0xC2 && (unsigned char)(*(c+1)) == 0xA7)){
+    for(unsigned const char* c = msg; *c; ++c){
+        if((*c) != 0xC2 || (*(c+1)) != 0xA7){
             putchar(*c);
             continue;
         }
@@ -76,6 +79,7 @@ void net_handle_chat(char* buffer){
         }
     }
     printf("\e[00m\n");
+    free(msg);
 }
 void net_handle_time_change(char* buffer){
     int64_t time;
@@ -141,6 +145,7 @@ void net_handle_painting(char* buffer){
     
     packet_decode(P_PAINTING, buffer, &id, &title, &x, &y, &z, &dir);
     fprintf(stdout, "Painting: %s at %d,%d,%d\n", title, x, y, z);
+    free(title);
 }
 void net_handle_xp_orb(char* buffer){
     fprintf(stderr, "XP ORB\n");
@@ -191,13 +196,14 @@ void net_handle_chunk_preload(char* buffer){
 	uint32_t x, z;
 	uint8_t mode;
 	packet_decode(P_CHUNK_PRELOAD, buffer, &x, &z, &mode);
+	chunk_preload(x, z);
     fprintf(stderr, "Chunk Preload: %c x: %03d, z: %03d\n", mode == 0 ? '-' : '+', x, z);
 }
 void net_handle_chunk_load(char* buffer){
     int32_t x, z, size;
     uint16_t mask1, mask2;
     int8_t full;
-    
+        
     packet_decode(P_CHUNK_LOAD, buffer, &x, &z, &full, &mask1, &mask2);
     memcpy(&size, buffer + 13, 4);
     size = be32toh(size);
@@ -218,19 +224,9 @@ void net_handle_chunk_load(char* buffer){
     ret = inflate(&strm, Z_NO_FLUSH);           
     inflateEnd(&strm);
     
-    if(full) gfx_addchunk(x, z, mask1, out);
-    else free(out);
-    
-    /*FILE* outfile = fopen("chunk.out", "wb");
-    fwrite(out, strm.total_out, 1, outfile);
-    fflush(outfile);
-    fclose(outfile);
-    free(out);
-    
-    FILE* info = fopen("chunk.info", "wb");
-    fwrite(&mask1, 2, 1, info);
-    fclose(info);*/
-    
+    if(full){
+	    chunk_add(x, z, mask1, out);
+	} else free(out);
 }
 void net_handle_chunk_diff(char* buffer){
     fprintf(stderr, "CHUNK DIFF\n");
@@ -286,6 +282,10 @@ void net_handle_sign_change(char* buffer){
     
     packet_decode(P_SIGN_CHANGE, buffer, &x, &y, &z, &l1, &l2, &l3, &l4);
     fprintf(stdout, "Sign:\n\t%s\n\t%s\n\t%s\n\t%s\n", l1, l2, l3, l4);
+    free(l1);
+    free(l2);
+    free(l3);
+    free(l4);
 }
 void net_handle_map_data(char* buffer){
     fprintf(stderr, "MAP DATA\n");
@@ -302,14 +302,16 @@ void net_handle_player_list(char* buffer){
 	char* name;
 	packet_decode(P_PLAYER_LIST, buffer, &name, &state, &ms);
     fprintf(stderr, "Player List: %c%s with %d ms\n", state ? '+' : '-', name, ms);
+    free(name);
 }
 void net_handle_player_privs(char* buffer){
     fprintf(stderr, "PLAYER PRIVS\n");
 }
 void net_handle_disconnect(char* buffer){
-    const char* reason;
+    char* reason;
     
     packet_decode(P_DISCONNECT, buffer, &reason);
     printf("DISCONNECTED: \e[1;31m%s.\e[00m\n", reason);
+    free(reason);
     exit(1);
 }
