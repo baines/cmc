@@ -258,7 +258,7 @@ void gfx_carve_chunks(void){
 			chunks[cur].y = (j * 16) + 8.0f;
 			
 			for(int c = 0; c < 4; ++c){
-				if(neighbors[i].buff) chunks[cur].sides[c] = 1;
+				if(neighbors[c].buff) chunks[cur].sides[c] = 1;
 				else chunks[cur].sides[c] = 0;
 			}
 			

@@ -54,7 +54,7 @@ static inline int xztoindex(int cx, int cz){
 	return wrap(cx + chunk_addx, chunk_modx) + (wrap(cz + chunk_addz, chunk_modz) * chunk_modz);
 }
 
-static void copyChunkAt(struct chunk_column* c, int cx, int cz){
+static void get_chunk(struct chunk_column* c, int cx, int cz){
 	struct chunk_column* p = cstore + xztoindex(cx, cz);
 	if(p->buff && p->cx == cx && p->cz == cz)
 		memcpy(c, p, sizeof(*p));
@@ -62,10 +62,10 @@ static void copyChunkAt(struct chunk_column* c, int cx, int cz){
 
 void chunk_getNeighbors(struct chunk_column* c, int cx, int cz){
 	memset(c, 0, sizeof(*c) * 4);
-	copyChunkAt(c + 0, cx -1, cz);
-	copyChunkAt(c + 1, cx +1, cz);
-	copyChunkAt(c + 2, cx, cz -1);
-	copyChunkAt(c + 3, cx, cz +1);
+	get_chunk(c + 0, cx -1, cz);
+	get_chunk(c + 1, cx +1, cz);
+	get_chunk(c + 2, cx, cz -1);
+	get_chunk(c + 3, cx, cz +1);
 }
 
 void chunk_add(int cx, int cz, uint16_t mask, const uint8_t* buff){
