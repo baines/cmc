@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS += -D_GNU_SOURCE=1 -Wall -std=c99 -pipe
-LDFLAGS = -lSDL -lz -lSDL_image -lGL -lGLU -lm
+LDFLAGS = -lSDL -lz -lSDL_image -lGL -lGLU -lm -lglut
 builddir = ../build/linux
 exec = ../cmc
 headers = $(wildcard *.h)

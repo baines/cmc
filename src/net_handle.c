@@ -1,10 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <zlib.h>
+#include <inttypes.h>
 #include "net_handle.h"
 #include "network.h"
 #include "packet.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "zlib.h"
-#include "string.h"
 #include "gfx.h"
 #include "chunk.h"
 
@@ -85,7 +86,7 @@ void net_handle_time_change(char* buffer){
     int64_t time;
     
     packet_decode(P_TIME_CHANGE, buffer, &time);
-    fprintf(stderr, "TIME CHANGE: %llu\n", time);
+    fprintf(stderr, "TIME CHANGE: %" PRIi64 "\n", time);
 }
 void net_handle_equip_change(char* buffer){
     fprintf(stderr, "EQUIP\n");
@@ -223,7 +224,9 @@ void net_handle_chunk_load(char* buffer){
     ret = inflateInit(&strm);
     ret = inflate(&strm, Z_NO_FLUSH);           
     inflateEnd(&strm);
-    
+   
+	(void)ret;
+
     if(full){
 	    chunk_add(x, z, mask1, out);
 	} else free(out);

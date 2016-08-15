@@ -83,13 +83,21 @@ int main(int argc, char** argv){
 		}
 		
         net_recv_and_process();
-        if(net_get_logged_in()) net_send(P_PLAYER_FLYING, 2, 1);
+
+        if(net_get_logged_in()){
+			net_send(P_PLAYER_FLYING, 2, 1);
+		}
+
         gfx_carve_chunks();
+
         while((delta = (SDL_GetTicks() - time)) < 12){
         	SDL_Delay(1);
         }
-        gfx_drawframe(xrot, yrot);
+		time = SDL_GetTicks();
+
+        gfx_drawframe(xrot, yrot, delta);
     }
+
     net_quit();
     SDL_Quit();
     return 0;
