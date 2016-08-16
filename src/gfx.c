@@ -68,11 +68,16 @@ void loadTex(void){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 4);
+	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0.0f);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, 
 		GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
 
+	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(surface);
@@ -146,30 +151,30 @@ void addBillBoard(int x, int y, int z, unsigned char id){
 
 	uint8_t tex = blocks[id].tex_side;
 
-	struct vx v[16] = {
+	struct vx v[] = {
 		{ x  , y+1, z  , tex, r, g, b },
 		{ x+1, y+1, z+1, tex, r, g, b },
 		{ x+1, y  , z+1, tex, r, g, b },
 		{ x  , y  , z  , tex, r, g, b },
-		
-		{ x  , y  , z  , tex, r, g, b },
-		{ x+1, y  , z+1, tex, r, g, b },
+
 		{ x+1, y+1, z+1, tex, r, g, b },
 		{ x  , y+1, z  , tex, r, g, b },
-		
+		{ x  , y  , z  , tex, r, g, b },
+		{ x+1, y  , z+1, tex, r, g, b },
+
 		{ x+1, y+1, z  , tex, r, g, b },
 		{ x  , y+1, z+1, tex, r, g, b },
 		{ x  , y  , z+1, tex, r, g, b },
 		{ x+1, y  , z  , tex, r, g, b },
-		
-		{ x+1, y  , z  , tex, r, g, b },
-		{ x  , y  , z+1, tex, r, g, b },
+
 		{ x  , y+1, z+1, tex, r, g, b },
 		{ x+1, y+1, z  , tex, r, g, b },
+		{ x+1, y  , z  , tex, r, g, b },
+		{ x  , y  , z+1, tex, r, g, b },
 	};
 
-	memcpy(chunks[cur].verts + chunks[cur].count, &v, 16 * sizeof(struct vx));
-	chunks[cur].count += 16;
+	memcpy(chunks[cur].verts + chunks[cur].count, &v, sizeof(v));
+	chunks[cur].count += (sizeof(v) / sizeof(*v));
 }
 
 void genlut(void){
@@ -191,8 +196,11 @@ void gfx_init(void){
 	putenv("SDL_MOUSE_RELATIVE=0");
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	SDL_SetVideoMode(WIN_W, WIN_H, 32, SDL_OPENGL);
+	SDL_WM_SetCaption("CMC", 0);
 	
 	//glMatrixMode(GL_TEXTURE);
 	//glLoadIdentity();
@@ -224,11 +232,7 @@ void gfx_init(void){
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GEQUAL, 0.9);
-		
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	//glEnableClientState(GL_COLOR_ARRAY);
+	glAlphaFunc(GL_GEQUAL, 0.70);
 	
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_GrabInput(SDL_ENABLE);

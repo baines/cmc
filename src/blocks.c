@@ -28,8 +28,8 @@ void block_get_colors(uint8_t id, uint8_t side, float* r, float* g, float* b){
 
 		case B_SHRUB: {
 			*r = 0.5f;
-			*g = 1.0f;
-			*b = 0.6f;
+			*g = 0.9f;
+			*b = 0.5f;
 		} break;
 
 		default: {
